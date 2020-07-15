@@ -8,6 +8,7 @@
 % Analyze behaviour of model where if variance is larger, get bigger errors
 
 % Can get confidence from this model:
+% How might max iter and sig trade off against each other?
 
 clear; close all
 
@@ -16,15 +17,15 @@ maxiter = 30;
 range = 100;
 sig = 0.3;
 ns = 1e5;
-ntrials = 100;
+ntrials = 5;
 
-% figure;
-% set(gcf,'Position',[0 0 560 420])
-% ax = gca;
-% ax.NextPlot = 'replaceChildren';
-% 
-% v = VideoWriter('trials.avi');
-% open(v);
+figure;
+set(gcf,'Position',[0 0 560 420])
+ax = gca;
+ax.NextPlot = 'replaceChildren';
+
+v = VideoWriter('trials.avi');
+open(v);
 
 for t = 1:ntrials
     iter = 1;
@@ -88,10 +89,10 @@ for t = 1:ntrials
                                             % refminusmu_mean is the error
                                             % signal
         
-        if t == 1 && iter == 1
-            figure
-            hist(refminusmu_s)
-        end
+%         if t == 1 && iter == 1
+%             figure
+%             hist(refminusmu_s)
+%         end
         
         % Update
         mu_hat = mu_hat - alpha * refminusmu_mean; % Make the new reference point the posterior mean
@@ -104,29 +105,29 @@ for t = 1:ntrials
     end
     mu_hat_all = [mu_hat_0, mu_hat_all];
     
-%     for j=1:maxiter+20
-%         clf
-%         axis off
-%         axis([0 100 -10 10])
-%         line([0 100], [0 0],'Color','blue','linewidth', 1)
-%         
-%         for i=1:N
-%             line(s(i)*[1 1], [-1 1],'Color','black','linewidth', 1.5)
-%         end
-%         
-%         if j<maxiter
-%             line(mu_hat_all(j) * [1 1], [-1 1],'Color','red','linewidth', 1.5)
-%         else
-%             line(mu_hat_all(maxiter) * [1 1], [-1 1],'Color','red','linewidth', 1.5)
-%         end
-%         if j> maxiter + 10
-%             line(mu_hat_all(maxiter) * [1 1], [-1 1],'Color','red','linewidth', 1.5)
-%             line(mean(s) * [1 1], [-1 1],'Color','green','linewidth', 1.5)
-%         end
-%         frame = getframe(gcf);
-%         writeVideo(v,frame);
-%     end
+    for j=1:maxiter+20
+        clf
+        axis off
+        axis([0 100 -10 10])
+        line([0 100], [0 0],'Color','blue','linewidth', 1)
+        
+        for i=1:N
+            line(s(i)*[1 1], [-1 1],'Color','black','linewidth', 1.5)
+        end
+        
+        if j<maxiter
+            line(mu_hat_all(j) * [1 1], [-1 1],'Color','red','linewidth', 1.5)
+        else
+            line(mu_hat_all(maxiter) * [1 1], [-1 1],'Color','red','linewidth', 1.5)
+        end
+        if j> maxiter + 10
+            line(mu_hat_all(maxiter) * [1 1], [-1 1],'Color','red','linewidth', 1.5)
+            line(mean(s) * [1 1], [-1 1],'Color','green','linewidth', 1.5)
+        end
+        frame = getframe(gcf);
+        writeVideo(v,frame);
+    end
     model.mu_hat(t) = mu_hat;
     stim.mean(t) = mean(s);
 end
-%close(v);
+close(v);
