@@ -19,14 +19,18 @@ for i_k = 1:K
 end
 
 cov_mat = nan(D,D,K);
-prob_k = nan(K,1);
+%prob_k = nan(length(x_hat),K);
 for i_k = 1:K 
     C = inv(L_k(:,:,i_k)); %Covariance matrix
     cov_mat(:,:,i_k) = C; %Store covariance matrix for output
     s = sqrt(diag(C)); %s is the standard deviation vector
     correlation_mat = diag(1./s)*C*diag(1./s);
     x_hat_standardized = bsxfun(@rdivide, x_hat-m(:,i_k)',s'); % bsxfun with @rdivide will do repmats then do ./s
-    prob_k(i_k) = alpha(i_k)*mvtpdf(x_hat_standardized, correlation_mat, v(i_k)+1-D); % eq 10.81 
+    try
+        prob_k(i_k,:) = alpha(i_k)*mvtpdf(x_hat_standardized, correlation_mat, v(i_k)+1-D); % eq 10.81 
+    catch
+        keyboard
+    end
     % To get the value of a normal distribution, you can do (x - mu) / std,
     % then plug in a standard normal (std = 1, mu = 0)
     % This is what's happening in mvtpdf, where it assumes std = 1, mu =0

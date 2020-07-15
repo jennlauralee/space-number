@@ -76,10 +76,14 @@ for i = 1:k
     Xm = bsxfun(@minus,X,m(:,i)); % Jenn: x - xbar
     Xm = bsxfun(@times,Xm,r(i,:)); % * sqrt(r) (line 74)
     m0m = m0-m(:,i);
-    M = M0+Xm*Xm'+kappa0*(m0m*m0m');     % equivalent to 10.62 M %Jenn: M is the inverse of W // Xm * Xm' 
-    %M = M0+Xm*Xm'+kappa0*nk/(kappa0+nk).*(m0m*m0m');     % equivalent to 10.62 M %Jenn: M is the inverse of W // Xm * Xm' 
+    %M = M0+Xm*Xm'+kappa0*(m0m*m0m');     % equivalent to 10.62 M %Jenn: M is the inverse of W // Xm * Xm' 
+    M = M0+Xm*Xm'+kappa0*nk/(kappa0+nk).*(m0m*m0m');     % equivalent to 10.62 M %Jenn: M is the inverse of W // Xm * Xm' 
     M_(:,:,i) = M;
-    U(:,:,i) = chol(M);
+    try
+        U(:,:,i) = chol(M);
+    catch
+        keyboard
+    end
     logW(i) = -2*sum(log(diag(U(:,:,i))));      
 end
 
