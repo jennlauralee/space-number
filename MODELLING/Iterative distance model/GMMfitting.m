@@ -34,19 +34,19 @@ stim.X = X;
 %% Set BADS parameters
 % We set the lower/upper bounds for optimization (in particular, note that 
 % we set a nonzero lower bound for the lapse rate)
-LB = [0 -inf log(0)];
-UB = [log(1) inf inf];
+LB = [0 -inf];
+UB = [inf inf];
 
 % We also set the "plausible" lower/upper bounds used by BADS
-PLB = [0 log(0.01) log(1)];
-PUB = [log(1) log(0.8) log(10)];
+PLB = [0 log(0.01)];
+PUB = [log(1) log(0.8)];
 
 % Initial starting parameters
 par0 = rand(size(LB)).*(PUB-PLB) + PLB;
 
-nJDsamples = 500;
+nMeasurements = 500;
 run = 1;
 
 tic
-[pars_run(run,:), NLL_run(run)] = bads(@(par) get_GMM_NLL(par, X, mu_resp, conf_resp, nJDsamples), par0, LB, UB, PLB, PUB);
+[pars_run(run,:), NLL_run(run)] = bads(@(par) get_GMM_NLL(par, X, mu_resp, conf_resp, nMeasurements), par0, LB, UB, PLB, PUB);
 toc

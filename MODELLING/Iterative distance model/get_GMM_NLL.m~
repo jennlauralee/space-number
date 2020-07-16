@@ -1,24 +1,27 @@
-function NLL = get_GMM_NLL(params, X, mu_resp, conf_resp, nJDsamples)
+function NLL = get_GMM_NLL(params, X, mu_resp, conf_resp, nMeasurements)
 %% For each trial, sample the joint distribution from func_iter_avg for the given parameters
 prob = nan(length(X),1);
 for i_trial = 1:length(X)
     x = X{i_trial};
-    mu_hat_samples = nan(1,nJDsamples);
-    conf_hat_samples = nan(1,nJDsamples);
-    for i_sample = 1:nJDsamples
-        [mu_hat_samples(i_sample), conf_hat_samples(i_sample)] = func_iter_avg(params, x);
-    end
+    [mu_hat_samples, conf_hat_samples] = func_iter_avg(params, x, nMeasurements);
     
 %% Fit a Gaussian mixture model (GMM) to the joint distribution using mixGaussVb
-    [~, model, ~] = mixGaussVb([mu_hat_samples; conf_hat_samples],2);
-    %k(i_trial) = max(z);
+    if range(conf_hat_samples) == 0
+        prob(i_trial) = normpdf(mu_resp(i_trial), mean(mu_hat_samples), std
+    else
+        
+    try
+        prob(i_trial) = mvnpdf([mu_resp(i_trial),log(conf_resp(i_trial))],[mean(mu_hat_samples) mean(log(conf_hat_samples))], cov(mu_hat_samples, log(conf_hat_samples)));
+    catch
+        keyboard
+    end    %k(i_trial) = max(z);
     %figure
     %plotClass([mu_hat_samples; conf_hat_samples], z);
         
 %% Evaluate the probability of the GMM at the subject's response for all trials
-    prob(i_trial) = get_mgvb_density(model,[mu_resp(i_trial), conf_resp(i_trial)]);
+    %prob(i_trial) = get_mgvb_density(model,[mu_resp(i_trial), conf_resp(i_trial)]);
     
-%% visualize 
+% %% visualize 
 %     figure
 %     scatter(mu_hat_samples, conf_hat_samples);
 %     hold on
@@ -30,16 +33,16 @@ for i_trial = 1:length(X)
 %     ys = linspace(ca.YLim(1), ca.YLim(2),1000);
 %     [Xs,Ys] = meshgrid(xs,ys);
 %     x_hat = [Xs(:) Ys(:)];
-%     [prob, cov_mat] = get_mgvb_density(model,x_hat);
-%     prob = reshape(prob,length(ys),length(xs));
+%     [probplot, cov_mat] = get_mgvb_density(model,x_hat);
+%     probplot = reshape(probplot,length(ys),length(xs));
 %     
 %     hold on
-%     contour(Xs,Ys,prob,'k', 'LineWidth', 2)
+%     contour(Xs,Ys,probplot,'k', 'LineWidth', 2)
 end
 
 %% Return the NLL for all trials
-if prob < exp(-10)
-    NLL = 
+prob(prob<exp(-10)) = exp(-10);
+
 NLL = sum(-log(prob));
 
 end

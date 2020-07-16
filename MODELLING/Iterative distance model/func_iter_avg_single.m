@@ -16,7 +16,7 @@
 % For every trial, subject, parameter, have to create a large fitted
 % distribution
 
-function [mu_hat, conf_hat, iter] = func_iter_avg(params, X, nMeasurements)
+function [mu_hat, conf_hat, iter] = func_iter_avg_single(params, X, nMeasurements)
 % should give a vector nMeasurements long for both mu_hat and conf_hat
 
 alpha = exp(params(1));
@@ -25,17 +25,16 @@ sig = exp(params(2));
 
 
 range = 100;
-ns = 1e2; % Samples for a single measurement
+ns = 5;%1e3; % Samples for a single measurement
 
 N_stim    = length(X);
 
-mu_hat_0   = rand(nMeasurements,1) * range;
+mu_hat_0   = rand * range;
 ref        = mu_hat_0; % initialize the reference point
 
 iter = 1;
-maxiter = 10;
-%stepsize = inf;
-while iter <maxiter %(stepsize > convergence_threshold)
+stepsize = inf;
+while iter <4 %(stepsize > convergence_threshold)
 
     % Generative model
     d = ref - X; % d is how far off the cursor is (e.g. positive means cursor is RIGHT of the line)
@@ -44,47 +43,27 @@ while iter <maxiter %(stepsize > convergence_threshold)
                                            % if you add negative noise, you still end up with a positive x because it's
                                            % exponentiated again
 
-     % Inference through sampling 
-     % LOG NORMAL IS JUST ONE POSSIBILITY FOR
-     % WEBER'S LAW. When you add in those signs etc, we have to do
-     % inference over sampling-- average of a bunch of log normally
-     % distributed numbers cannot be calculated using an equation
-     
-     % We can simplify this problem: right now we have N_stim objects. 
-     % Instead of LOG NORMAL we use a GAMMA distribution (similar shape),
-     % you ALSO impose that the std is proportional to the mean
-     % (reparameterization), then it's more convenient; all the distances
-     % on one side, you can calculate the gamma distribution for their
-     % average. Dist of average of the 3 on the right is again a
-     % distribution
-     
-     % The average of gamma distributions is gamma distributed; you do this
-     % separately for the left and the right, but you still need samples to
-     % combine them across left and right.
-    samplenoise =  sig * randn(nMeasurements,N_stim,ns); % draw noise for every fixed observation and sample
-    logabsd_s = bsxfun(@plus,logx,samplenoise); %Add noise to the fixed observations
-                                                     % For each line (N lines), draw ns samples
+     % Inference through sampling
+    logabsd_s = bsxfun(@plus, logx, sig * randn(ns,N_stim)); % For each line (N lines), draw ns samples
                                                         % Add the sample to the log x (fixed observations)
 
                                                         % adding noise in log space
 
                                                         % One column of logabsd_s (histogram) looks like lognormal
                                                         % belief distribution.
-                                                        
     d_s = bsxfun(@times, sign(d), exp(logabsd_s)); % Exponentiate to put in actual d space-- add back in the signs
     
-    refminusmu_s   = squeeze(mean(d_s,2)); % Take mean across lines; vector of ns by 1 -- strive for refminusmu_s to be zero
+    refminusmu_s   = mean(d_s,2); % Take mean across lines; vector of ns by 1 -- strive for refminusmu_s to be zero
     %figure
     %hist(refminusmu_s); % Should look like a normal distribution
 
     mu_s = ref - refminusmu_s; % Absolute coordinates: posterior samples of mu
-    %%%%%%%%% Impose post-hoc interval prior: i.e., discard out-of-band mu samples %%%
-    %intervalprior = 0<=mu_s & 100>=mu_s; % Find IN-BOUND SAMPLES
-    %rejectsamples = ~intervalprior;
-    
-    %refminusmu_s(rejectsamples) =nan; % Replace out-of-bound samples with nans
+    %%% Impose post-hoc interval prior: i.e., discard out-of-band mu samples %%%
+    intervalprior = 0<=mu_s & 100>=mu_s; % Find in-bound samples
+    mu_s = mu_s(intervalprior);
+    refminusmu_s = refminusmu_s(intervalprior); % Keep only those in-bound samples
 
-    refminusmu_mean = mean(refminusmu_s,2);%nanmean(refminusmu_s,2); % Get the mean of the samples to get the posterior mean (over the cursor position relative to true mean)
+    refminusmu_mean = mean(refminusmu_s); % Get the mean of the samples to get the posterior mean (over the cursor position relative to true mean)
                                           % If the cursor is to the
                                           % RIGHT of hypothesized mean,
                                           % refminusmu_mean is positive.
@@ -94,31 +73,45 @@ while iter <maxiter %(stepsize > convergence_threshold)
                        % * alpha   % Error signal (refminusmu_mean) should be multiplied by an error
                                            % rate before you adjust.
 
-    %stepsize = abs(ref-mu_hat); % Update absolute stepsize
+    stepsize = abs(ref-mu_hat); % Update absolute stepsize
 
     ref = mu_hat; % Make the new reference point the posterior mean
 
     iter = iter + 1;
 end
 
-mu_hat = min(mu_hat,100);
-mu_hat = max(mu_hat,1);
-
 %%%% CONFIDENCE? %%%%
-halfconfs = [0:1:50];
-N = histc(abs(mu_s - mu_hat)', halfconfs); %Get the # of samples absolute distance away [0:1:50] from mu_hat
-AUC = cumsum(N);
+
+max_halfconf = min([mu_hat, 100-mu_hat]);
+halfconfs = [0:1:max_halfconf];
+leftconfs = mu_hat - halfconfs;
+rightconfs = mu_hat + halfconfs;
+
+AUC = nan(1,length(halfconfs));
+for i_c = 1:length(halfconfs)
+    AUC(i_c) = sum(mu_s>leftconfs(i_c) & mu_s<rightconfs(i_c))./length(mu_s);
+end
 
 rewardfn = exp(-(halfconfs*2)/20);  
 
-expected_utility = bsxfun(@times,AUC,rewardfn');
+expected_utility = AUC.*rewardfn;
 
 [~,i_conf_hat] = max(expected_utility);
 conf_hat = halfconfs(i_conf_hat);
-conf_hat = min(conf_hat,100);
-conf_hat = max(conf_hat,1); 
 
-% THIS TRUNCATED EDGE BREAKS DOWN THE GAUSSIAN APPROXIMATION -- need to fit to a Gaussian with peaked edges  
+% p_halfconf_ = exp(beta * expected_utility); %softmax readout of utility function
+% p_halfconf = p_halfconf_./sum(p_halfconf_);
+
+%%%% %%%% %%%% %%%%
+
+          % Build in the reward function to this
+          % refminusmu_mean posterior: and get
+          % softmax readout of utility function
+
+          % resp_conf_ = abs(pix2x(mouse_loc_pix[0])-resp_loc)*2   %%
+          %         resp_conf is the total range of x captured  by the
+          %         rectangle (spanning both sides of the response)
+          % pts = 15*np.exp(-resp_conf_/20)    
         
 end
     

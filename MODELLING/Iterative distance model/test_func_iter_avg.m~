@@ -52,7 +52,7 @@ tic
 
 for i_trial = 1:length(X)
     x = X{i_trial};
-    [mu_hat, conf_hat] = func_iter_avg(params, x,nMeasurements);
+    [model.mu_hat(i_trial), model.conf_hat(i_trial)] = func_iter_avg(params, x,nMeasurements);
     
     model.mu_hat(i_trial) = mean(mu_hat);
     model.conf_hat(i_trial) = mean(conf_hat); %Take measurement means
@@ -62,6 +62,7 @@ toc
 
 model.alpha = alpha;
 model.sig = sig;
+model.convergence_threshold = convergence_threshold;
 
 %save('test_s1_iter_avg.mat','stim','model');
 
