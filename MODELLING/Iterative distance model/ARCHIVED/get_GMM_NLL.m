@@ -6,15 +6,12 @@ for i_trial = 1:length(X)
     [mu_hat_samples, conf_hat_samples] = func_iter_avg(params, x, nMeasurements);
     
 %% Fit a Gaussian mixture model (GMM) to the joint distribution using mixGaussVb
-    if range(conf_hat_samples) == 0
-        prob(i_trial) = normpdf(mu_resp(i_trial), mean(mu_hat_samples), std
-    else
-        
     try
         prob(i_trial) = mvnpdf([mu_resp(i_trial),log(conf_resp(i_trial))],[mean(mu_hat_samples) mean(log(conf_hat_samples))], cov(mu_hat_samples, log(conf_hat_samples)));
     catch
         keyboard
-    end    %k(i_trial) = max(z);
+    end
+    %k(i_trial) = max(z);
     %figure
     %plotClass([mu_hat_samples; conf_hat_samples], z);
         

@@ -1,3 +1,4 @@
+close all
 clear
 clc
 
@@ -39,10 +40,12 @@ stim.X = X;
 
 %%
 
-alpha = 0; %log(0.8);
-sig = 0.1269; %log(0.5);
-
-params = [alpha, sig];
+alpha = log(0.8); %log(0.8);
+k_sig_scale = log(0.5);
+beta = log(7);
+lapse = log(0.1);%log(0.1);
+lambda_sig = 1;
+params = [alpha, k_sig_scale, beta, lapse, lambda_sig];
 
 nMeasurements = 5e2;
 
@@ -50,25 +53,22 @@ model.mu_hat = nan(1,length(X));
 model.conf_hat = nan(1,length(X));
 tic
 
+nSamples = 1;
+
 for i_trial = 1:length(X)
     x = X{i_trial};
-    [model.mu_hat(i_trial), model.conf_hat(i_trial)] = func_iter_avg(params, x,nMeasurements);
+    [model.mu_hat(i_trial), model.conf_hat(i_trial), nIter(i_trial), mu_hat_all{i_trial}] = func_iter_avg_gaussian_maxiter(params,x,nSamples);%func_iter_avg_single(params,x);%func_iter_avg(params, x,nMeasurements);
     
-    model.mu_hat(i_trial) = mean(mu_hat);
-    model.conf_hat(i_trial) = mean(conf_hat); %Take measurement means
+    %model.mu_hat(i_trial) = mean(mu_hat);
+    %model.conf_hat(i_trial) = mean(conf_hat); %Take measurement means
 end
 
 toc
 
 model.alpha = alpha;
-model.sig = sig;
-model.convergence_threshold = convergence_threshold;
-
-%save('test_s1_iter_avg.mat','stim','model');
+model.k_sig_scale = k_sig_scale;
 
 %% plotting summ stats for mu_hat
-
-load('test_s1_iter_avg.mat');
 
 figd;
 suptitle('model prediction')

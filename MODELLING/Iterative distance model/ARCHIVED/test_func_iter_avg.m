@@ -41,8 +41,8 @@ stim.X = X;
 
 alpha = 0; %log(0.8);
 sig = 0.1269; %log(0.5);
-
-params = [alpha, sig];
+convergence_threshold = log(10);
+params = [alpha, sig, convergence_threshold];
 
 nMeasurements = 5e2;
 
@@ -50,12 +50,12 @@ model.mu_hat = nan(1,length(X));
 model.conf_hat = nan(1,length(X));
 tic
 
-for i_trial = 1:length(X)
+for i_trial = 1%:10%length(X)
     x = X{i_trial};
-    [mu_hat, conf_hat] = func_iter_avg(params, x,nMeasurements);
+    [model.mu_hat(i_trial), model.conf_hat(i_trial)] = func_iter_avg_gaussianapprox(params,x);%func_iter_avg_single(params,x);%func_iter_avg(params, x,nMeasurements);
     
-    model.mu_hat(i_trial) = mean(mu_hat);
-    model.conf_hat(i_trial) = mean(conf_hat); %Take measurement means
+    %model.mu_hat(i_trial) = mean(mu_hat);
+    %model.conf_hat(i_trial) = mean(conf_hat); %Take measurement means
 end
 
 toc
@@ -67,7 +67,7 @@ model.sig = sig;
 
 %% plotting summ stats for mu_hat
 
-load('test_s1_iter_avg.mat');
+%load('test_s1_iter_avg.mat');
 
 figd;
 suptitle('model prediction')
@@ -78,17 +78,17 @@ xlabel('true mean')
 ylabel('mean estimate')
 
 subplot(2,2,2)
-scatter(stim.std, abs(model.mu_hat - stim.mean'))
+scatter(stim.std, abs(model.mu_hat - stim.mean))
 xlabel('stim std')
 ylabel('absolute error')
 
 subplot(2,2,3)
-scatter(stim.mean, abs(model.mu_hat - stim.mean'))
+scatter(stim.mean, abs(model.mu_hat - stim.mean))
 xlabel('true mean')
 ylabel('absolute error')
 
 subplot(2,2,4)
-scatter(stim.maxrange, abs(model.mu_hat - stim.mean'))
+scatter(stim.maxrange, abs(model.mu_hat - stim.mean))
 xlabel('stim max range')
 ylabel('absolute error')
 

@@ -33,7 +33,7 @@ mu_hat_0   = rand(nMeasurements,1) * range;
 ref        = mu_hat_0; % initialize the reference point
 
 iter = 1;
-maxiter = 10;
+maxiter = 30;
 %stepsize = inf;
 while iter <maxiter %(stepsize > convergence_threshold)
 

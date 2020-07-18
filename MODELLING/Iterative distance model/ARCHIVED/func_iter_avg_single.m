@@ -16,16 +16,16 @@
 % For every trial, subject, parameter, have to create a large fitted
 % distribution
 
-function [mu_hat, conf_hat, iter] = func_iter_avg_single(params, X, nMeasurements)
+function [mu_hat, conf_hat, iter] = func_iter_avg_single(params, X)
 % should give a vector nMeasurements long for both mu_hat and conf_hat
 
 alpha = exp(params(1));
 sig = exp(params(2));
-%convergence_threshold = exp(params(3));
+convergence_threshold = exp(params(3));
 
 
 range = 100;
-ns = 5;%1e3; % Samples for a single measurement
+ns = 1e3; % Samples for a single measurement
 
 N_stim    = length(X);
 
@@ -34,11 +34,11 @@ ref        = mu_hat_0; % initialize the reference point
 
 iter = 1;
 stepsize = inf;
-while iter <4 %(stepsize > convergence_threshold)
+while (stepsize > convergence_threshold)
 
     % Generative model
     d = ref - X; % d is how far off the cursor is (e.g. positive means cursor is RIGHT of the line)
-    logx = log(abs(d)) + sig * randn(nMeasurements,N_stim); % x is vector of measurement of absolute distances to all the lines
+    logx = log(abs(d)) + sig * randn(1,N_stim); % x is vector of measurement of absolute distances to all the lines
                                            % Constant noise on the log of the distance log normal distributions:
                                            % if you add negative noise, you still end up with a positive x because it's
                                            % exponentiated again
@@ -62,6 +62,9 @@ while iter <4 %(stepsize > convergence_threshold)
     intervalprior = 0<=mu_s & 100>=mu_s; % Find in-bound samples
     mu_s = mu_s(intervalprior);
     refminusmu_s = refminusmu_s(intervalprior); % Keep only those in-bound samples
+    if length(refminusmu_s)==0
+        keyboard
+    end
 
     refminusmu_mean = mean(refminusmu_s); % Get the mean of the samples to get the posterior mean (over the cursor position relative to true mean)
                                           % If the cursor is to the
