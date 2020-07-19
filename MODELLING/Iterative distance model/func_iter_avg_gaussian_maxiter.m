@@ -27,10 +27,8 @@ maxiter = 10;
 alpha = exp(params(1));
 k_sig_scale = exp(params(2));
 beta = exp(params(3));
-lambda = 0;
+lambda = 0; % Set to zero because there is no lapse in this model
 lapse_sig = 1;
-%lambda = exp(params(4));
-%lapse_sig = exp(params(5));
 
 range = 100;
 

@@ -17,13 +17,13 @@ headers = allcsvdata.Properties.VariableNames;
 
 %% Condition trials FOR SUB1
 
-i_testsub1 = allcsvdata{:,13}==1 & allcsvdata{:,2}==1; % Get indices for trials for subject 1, num_block ==1
-mu_resp = allcsvdata{i_testsub1, 5}; % Get mu_est for subject 1, num_block ==1
-conf_resp = allcsvdata{i_testsub1, 6}; % Get conf_est for subject 1
-X = cellfun(@str2num, allXvec{i_testsub1,2}, 'UniformOutput', false); % Get X stimuli
+num_block = 1;
+sub_id = 1;
 
-teststim = readtable('testsub1stim.csv');
-sub1teststim = teststim{:,2};
+i_testsub = allcsvdata{:,13}==sub_id & allcsvdata{:,2}==num_block; % Get indices for trials for subject 1, num_block ==1
+mu_resp = allcsvdata{i_testsub, 5}; % Get mu_est for subject 1, num_block ==1
+conf_resp = allcsvdata{i_testsub, 6}; % Get conf_est for subject 1
+X = cellfun(@str2num, allXvec{i_testsub,2}, 'UniformOutput', false); % Get X stimuli
 
 stim.maxrange = cellfun(@max, X)-cellfun(@min, X);
 stim.std = cellfun(@std, X);
@@ -61,8 +61,24 @@ PUB = [log(1),... %alpha
 par0 = rand(size(LB)).*(PUB-PLB) + PLB;
 
 nSamples = 500;
-run = 1;
 
 tic
-[pars_run(run,:), NLL_run(run)] = bads(@(par) get_gaussian_maxiter_NLL(X, mu_resp, conf_resp, par, nSamples), par0, LB, UB, PLB, PUB);
+[pars_run, NLL_run] = bads(@(par) get_gaussian_maxiter_NLL(X, mu_resp, conf_resp, par, nSamples), par0, LB, UB, PLB, PUB);
 toc
+
+[~, bestrunidx] = max(NLL_run);
+
+
+%% save output
+model.pars_run = pars_run;
+model.NLL_run = NLL_run;
+model.sub_id = sub_id;
+model.num_block = num_block;
+
+if num_block
+    block_text = 'Num';
+else
+    block_text = 'Space';
+end
+
+save(['gaussian_maxiter_sub' num2str(sub_id) '_' block_text '.mat'], 'stim','model');

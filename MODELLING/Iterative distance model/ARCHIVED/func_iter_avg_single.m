@@ -23,9 +23,7 @@ alpha = exp(params(1));
 sig = exp(params(2));
 convergence_threshold = exp(params(3));
 
-
 range = 100;
-ns = 1e3; % Samples for a single measurement
 
 N_stim    = length(X);
 
@@ -44,7 +42,7 @@ while (stepsize > convergence_threshold)
                                            % exponentiated again
 
      % Inference through sampling
-    logabsd_s = bsxfun(@plus, logx, sig * randn(ns,N_stim)); % For each line (N lines), draw ns samples
+    logabsd_s = bsxfun(@plus, logx, sig * randn(N_stim)); % For each line (N lines), draw ns samples
                                                         % Add the sample to the log x (fixed observations)
 
                                                         % adding noise in log space
