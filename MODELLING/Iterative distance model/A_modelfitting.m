@@ -11,7 +11,7 @@ addpath(genpath(pwd))
 
 modelvec = [1];
 blockvec = [0 1];
-subvec = [1];
+subvec = [1:10];
 runvec = [1:100];
 
 designmat = combvec(modelvec,blockvec,subvec,runvec)';

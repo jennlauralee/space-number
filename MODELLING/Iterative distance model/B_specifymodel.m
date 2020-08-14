@@ -1,4 +1,4 @@
-function model = C_specifymodel(modelidx)
+function model = B_specifymodel(modelidx)
 
 % Model 1: One iteration,  with k_sig_scale and b_sig_scale
          % starting point is cursor spawn location
@@ -27,7 +27,27 @@ switch modelidx
         pub = [log(1),... %k_sig_scale
               log(1),... %b_sig
               log(0.1),... %alpha
-              log(20)];%,... %beta    
+              log(20)];%,... %beta 
+          
+  case {2}
+        f_NLL = @get_NLL;
+        f_simulate = @func_iter_avg_gaussian_oneiter_constnoise;
+        pars = {'(1) sig: fixed sigma',...
+                '(2) alpha: mapping between objective and subjective reward',...
+                '(3) beta: inverse temperature for confidence resp, higher = lower noise'};
+        npars = length(pars);
+        lb = [log(0),... %sig
+              log(0),... %alpha
+              log(0)];%,... %beta
+        ub = [inf,... %sig
+              inf,... %alpha
+              inf];%,... %beta
+        plb = [log(0.01),... %sig
+              log(0.01),... %alpha
+              log(1)];%,... %beta
+        pub = [log(2),... %sig
+              log(0.1),... %alpha
+              log(20)];%,... %beta  
 end
 
 model.npars           = npars;
